@@ -22,13 +22,7 @@ import org.springframework.security.saml.metadata.CachingMetadataManager;
 import org.springframework.security.saml.metadata.ExtendedMetadata;
 import org.springframework.security.saml.metadata.MetadataGeneratorFilter;
 import org.springframework.security.saml.processor.SAMLProcessorImpl;
-import org.springframework.security.saml.websso.WebSSOProfile;
-import org.springframework.security.saml.websso.WebSSOProfileConsumer;
-import org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl;
-import org.springframework.security.saml.websso.WebSSOProfileConsumerImpl;
-import org.springframework.security.saml.websso.WebSSOProfileHoKImpl;
-import org.springframework.security.saml.websso.WebSSOProfileImpl;
-import org.springframework.security.saml.websso.WebSSOProfileOptions;
+import org.springframework.security.saml.websso.*;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -87,7 +81,7 @@ public class WebSecurityConfig {
         samlEntryPoint.setDefaultProfileOptions(defaultWebSSOProfileOptions());
         samlEntryPoint.setWebSSOprofile(webSSOprofile());
         samlEntryPoint.setContextProvider(contextProvider());
-//        samlEntryPoint.setMetadata(metadata());
+        samlEntryPoint.setMetadata(cachingMetadataManager);
         samlEntryPoint.setSamlLogger(samlLogger());
         return samlEntryPoint;
     }
@@ -103,6 +97,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    @Qualifier("webSSOprofile")
     public WebSSOProfile webSSOprofile() {
         return new WebSSOProfileImpl();
     }
@@ -113,16 +108,6 @@ public class WebSecurityConfig {
         webSSOProfileOptions.setIncludeScoping(false);
         return webSSOProfileOptions;
     }
-
-//    @Bean
-//    @Qualifier("webSSOprofileConsumer")
-//    public WebSSOProfileConsumer webSSOprofileConsumerImpl() {
-//        WebSSOProfileConsumerImpl consumerImpl = new WebSSOProfileConsumerImpl();
-//        consumerImpl.setProcessor(processor);
-//        consumerImpl.setMetadata(cachingMetadataManager);
-//        consumerImpl.setResponseSkew(0);
-//        return consumerImpl;
-//    }
 
     @Bean
     public FilterChainProxy samlFilter() throws Exception {
@@ -154,22 +139,25 @@ public class WebSecurityConfig {
     public SAMLAuthenticationProvider samlAuthenticationProvider() {
 //        return new SAMLAuthenticationProvider();
         CustomSAMLAuthenticationProvider customSAMLAuthenticationProvider = new CustomSAMLAuthenticationProvider();
-        customSAMLAuthenticationProvider.setConsumer(new WebSSOProfileConsumerImpl(processor, cachingMetadataManager));
+        customSAMLAuthenticationProvider.setConsumer(webSSOprofileConsumer());
 //        customSAMLAuthenticationProvider.setHokConsumer(webSSOProfileHokConsumer());
         return customSAMLAuthenticationProvider;
     }
 
     @Bean
-    public WebSSOProfileConsumer webSSOProfileConsumer(){
-        return new WebSSOProfileConsumerImpl(processor, cachingMetadataManager);
+    public WebSSOProfileConsumer webSSOprofileConsumer() {
+        return new WebSSOProfileConsumerImpl();
+    }
+
+    // SAML 2.0 Holder-of-Key WebSSO Assertion Consumer
+    @Bean
+    public WebSSOProfileConsumerHoKImpl hokWebSSOprofileConsumer() {
+        return new WebSSOProfileConsumerHoKImpl();
     }
 
     @Bean
-    public WebSSOProfileHoKImpl webSSOProfileHokConsumer(){
-        WebSSOProfileHoKImpl webSSOProfileHoK = new WebSSOProfileHoKImpl();
-        webSSOProfileHoK.setProcessor(processor);
-        webSSOProfileHoK.setMetadata(cachingMetadataManager);
-        return webSSOProfileHoK;
+    public SingleLogoutProfile logoutprofile() {
+        return new SingleLogoutProfileImpl();
     }
 
     @Bean
