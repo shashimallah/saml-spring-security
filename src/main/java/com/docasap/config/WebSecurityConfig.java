@@ -10,12 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.saml.SAMLAuthenticationProvider;
-import org.springframework.security.saml.SAMLDiscovery;
-import org.springframework.security.saml.SAMLEntryPoint;
-import org.springframework.security.saml.SAMLLogoutFilter;
-import org.springframework.security.saml.SAMLLogoutProcessingFilter;
-import org.springframework.security.saml.SAMLProcessingFilter;
+import org.springframework.security.saml.*;
 import org.springframework.security.saml.context.SAMLContextProviderImpl;
 import org.springframework.security.saml.log.SAMLDefaultLogger;
 import org.springframework.security.saml.metadata.CachingMetadataManager;
@@ -36,6 +31,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,6 +68,17 @@ public class WebSecurityConfig {
         http.addFilterBefore(metadataGeneratorFilter, ChannelProcessingFilter.class)
                 .addFilterAfter(samlFilter(), BasicAuthenticationFilter.class)
                 .addFilterBefore(samlFilter(), CsrfFilter.class);
+        http.authorizeRequests()
+                .antMatchers("/").permitAll()
+                .anyRequest().authenticated();
+        http.logout()
+                .addLogoutHandler((request, response, authentication) -> {
+                    try {
+                        response.sendRedirect("/saml/logout");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
         return http.build();
     }
 
@@ -97,7 +104,6 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    @Qualifier("webSSOprofile")
     public WebSSOProfile webSSOprofile() {
         return new WebSSOProfileImpl();
     }

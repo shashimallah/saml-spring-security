@@ -9,24 +9,17 @@ import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.parse.StaticBasicParserPool;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.saml.key.EmptyKeyManager;
-import org.springframework.security.saml.metadata.CachingMetadataManager;
-import org.springframework.security.saml.metadata.ExtendedMetadata;
-import org.springframework.security.saml.metadata.ExtendedMetadataDelegate;
-import org.springframework.security.saml.metadata.MetadataGenerator;
-import org.springframework.security.saml.metadata.MetadataGeneratorFilter;
-import org.springframework.security.saml.websso.WebSSOProfileConsumer;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.security.saml.key.JKSKeyManager;
+import org.springframework.security.saml.metadata.*;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
+import java.util.*;
 
 @Configuration
 public class SamlSecurityConfig {
@@ -37,7 +30,7 @@ public class SamlSecurityConfig {
     @Bean
     @Qualifier("onelogin")
     public ExtendedMetadataDelegate oneloginExtendedMetadataProvider() throws MetadataProviderException, ResourceException, ConfigurationException {
-        Resource resource = new ClasspathResource("/saml/onelogin_metadata.xml");
+        Resource resource = new ClasspathResource("/saml/onelogin-metadata.xml");
         Timer timer = new Timer("saml-metadata");
         ResourceBackedMetadataProvider resourceBackedMetadataProvider = new ResourceBackedMetadataProvider(timer, resource);
         resourceBackedMetadataProvider.setParserPool(parserPool());
@@ -69,32 +62,29 @@ public class SamlSecurityConfig {
     public MetadataGenerator metadataGenerator() {
         MetadataGenerator metadataGenerator = new MetadataGenerator();
         metadataGenerator.setEntityId(samlAudience);
-//        metadataGenerator.setExtendedMetadata(extendedMetadata());
+        metadataGenerator.setExtendedMetadata(extendedMetadata());
         metadataGenerator.setIncludeDiscoveryExtension(false);
         metadataGenerator.setKeyManager(keyManager());
         return metadataGenerator;
     }
 
     @Bean
-    public EmptyKeyManager keyManager() {
-    	/*
+    public JKSKeyManager keyManager() {
         DefaultResourceLoader loader = new DefaultResourceLoader();
-        Resource storeFile = loader
-                .getResource("classpath:/saml/samlKeystore.jks");
-        String storePass = "nalle123";
-        Map<String, String> passwords = new HashMap<String, String>();
-        passwords.put("apollo", "nalle123");
-        String defaultKey = "apollo";
+        org.springframework.core.io.Resource storeFile = loader
+                .getResource("classpath:/saml/saml-keystore.jks");
+        String storePass = "saml-spring-security";
+        Map<String, String> passwords = new HashMap<>();
+        passwords.put("saml-spring-security", "saml-spring-security");
+        String defaultKey = "saml-spring-security";
         return new JKSKeyManager(storeFile, storePass, passwords, defaultKey);
-        */
-        return new EmptyKeyManager();
     }
 
     @Bean
     public ExtendedMetadata extendedMetadata() {
         ExtendedMetadata extendedMetadata = new ExtendedMetadata();
         extendedMetadata.setIdpDiscoveryEnabled(false);
-        extendedMetadata.setSignMetadata(false);
+//        extendedMetadata.setSignMetadata(false);
         return extendedMetadata;
     }
 
