@@ -11,12 +11,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.saml.*;
-import org.springframework.security.saml.context.SAMLContextProviderImpl;
-import org.springframework.security.saml.log.SAMLDefaultLogger;
-import org.springframework.security.saml.metadata.CachingMetadataManager;
-import org.springframework.security.saml.metadata.ExtendedMetadata;
 import org.springframework.security.saml.metadata.MetadataGeneratorFilter;
-import org.springframework.security.saml.processor.SAMLProcessorImpl;
 import org.springframework.security.saml.websso.*;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.FilterChainProxy;
@@ -40,31 +35,24 @@ import java.util.List;
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig {
 
-
     @Autowired
-    private ExtendedMetadata extendedMetadata;
-
-    @Autowired
-    @Qualifier("saml")
-    private SavedRequestAwareAuthenticationSuccessHandler samlAuthSuccessHandler;
+    SAMLEntryPoint samlEntryPoint;
 
     @Autowired
     @Qualifier("saml")
-    private SimpleUrlAuthenticationFailureHandler samlAuthFailureHandler;
+    SavedRequestAwareAuthenticationSuccessHandler samlAuthSuccessHandler;
 
     @Autowired
-    private MetadataGeneratorFilter metadataGeneratorFilter;
+    @Qualifier("saml")
+    SimpleUrlAuthenticationFailureHandler samlAuthFailureHandler;
 
     @Autowired
-    private SAMLProcessorImpl processor;
-
-    @Autowired
-    private CachingMetadataManager cachingMetadataManager;
+    MetadataGeneratorFilter metadataGeneratorFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable();
-        http.httpBasic().authenticationEntryPoint(samlEntryPoint());
+        http.httpBasic().authenticationEntryPoint(samlEntryPoint);
         http.addFilterBefore(metadataGeneratorFilter, ChannelProcessingFilter.class)
                 .addFilterAfter(samlFilter(), BasicAuthenticationFilter.class)
                 .addFilterBefore(samlFilter(), CsrfFilter.class);
@@ -82,44 +70,11 @@ public class WebSecurityConfig {
         return http.build();
     }
 
-    //Saml entry point
-    public SAMLEntryPoint samlEntryPoint() {
-        SAMLEntryPoint samlEntryPoint = new SAMLEntryPoint();
-        samlEntryPoint.setDefaultProfileOptions(defaultWebSSOProfileOptions());
-        samlEntryPoint.setWebSSOprofile(webSSOprofile());
-        samlEntryPoint.setContextProvider(contextProvider());
-        samlEntryPoint.setMetadata(cachingMetadataManager);
-        samlEntryPoint.setSamlLogger(samlLogger());
-        return samlEntryPoint;
-    }
-
     @Bean
-    public SAMLDefaultLogger samlLogger() {
-        return new SAMLDefaultLogger();
-    }
-
-    @Bean
-    public SAMLContextProviderImpl contextProvider() {
-        return new SAMLContextProviderImpl();
-    }
-
-    @Bean
-    public WebSSOProfile webSSOprofile() {
-        return new WebSSOProfileImpl();
-    }
-
-    @Bean
-    public WebSSOProfileOptions defaultWebSSOProfileOptions() {
-        WebSSOProfileOptions webSSOProfileOptions = new WebSSOProfileOptions();
-        webSSOProfileOptions.setIncludeScoping(false);
-        return webSSOProfileOptions;
-    }
-
-    @Bean
-    public FilterChainProxy samlFilter() throws Exception {
+    public FilterChainProxy samlFilter() {
         List<SecurityFilterChain> chains = new ArrayList<>();
         chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/login/**"),
-                samlEntryPoint()));
+                samlEntryPoint));
         chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/SSO/**"),
                 samlWebSSOProcessingFilter()));
         chains.add(new DefaultSecurityFilterChain(new AntPathRequestMatcher("/saml/discovery/**"),
@@ -143,10 +98,8 @@ public class WebSecurityConfig {
 
     @Bean
     public SAMLAuthenticationProvider samlAuthenticationProvider() {
-//        return new SAMLAuthenticationProvider();
         CustomSAMLAuthenticationProvider customSAMLAuthenticationProvider = new CustomSAMLAuthenticationProvider();
         customSAMLAuthenticationProvider.setConsumer(webSSOprofileConsumer());
-//        customSAMLAuthenticationProvider.setHokConsumer(webSSOProfileHokConsumer());
         return customSAMLAuthenticationProvider;
     }
 
@@ -162,7 +115,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public SingleLogoutProfile logoutprofile() {
+    public SingleLogoutProfile logoutProfile() {
         return new SingleLogoutProfileImpl();
     }
 

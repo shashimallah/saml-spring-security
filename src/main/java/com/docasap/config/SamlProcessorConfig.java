@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 //Saml Processor to parse saml message from http request
 @Configuration
-public class SamlProcessor {
+public class SamlProcessorConfig {
 
     @Autowired
     StaticBasicParserPool parserPool;
