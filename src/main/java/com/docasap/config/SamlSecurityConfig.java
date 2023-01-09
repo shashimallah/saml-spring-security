@@ -1,6 +1,5 @@
 package com.docasap.config;
 
-import com.docasap.saml.providers.CustomSAMLAuthenticationProvider;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
@@ -10,20 +9,20 @@ import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.parse.StaticBasicParserPool;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.saml.SAMLAuthenticationProvider;
-import org.springframework.security.saml.SAMLLogoutFilter;
-import org.springframework.security.saml.SAMLLogoutProcessingFilter;
 import org.springframework.security.saml.key.EmptyKeyManager;
-import org.springframework.security.saml.metadata.*;
+import org.springframework.security.saml.metadata.CachingMetadataManager;
+import org.springframework.security.saml.metadata.ExtendedMetadata;
+import org.springframework.security.saml.metadata.ExtendedMetadataDelegate;
+import org.springframework.security.saml.metadata.MetadataGenerator;
+import org.springframework.security.saml.metadata.MetadataGeneratorFilter;
+import org.springframework.security.saml.websso.WebSSOProfileConsumer;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,12 +74,6 @@ public class SamlSecurityConfig {
         metadataGenerator.setKeyManager(keyManager());
         return metadataGenerator;
     }
-
-    @Bean
-    public SAMLAuthenticationProvider samlAuthenticationProvider() {
-        return new CustomSAMLAuthenticationProvider();
-    }
-
 
     @Bean
     public EmptyKeyManager keyManager() {
