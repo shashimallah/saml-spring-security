@@ -5,10 +5,10 @@ import org.springframework.security.saml.SAMLCredential;
 
 public class CustomSAMLAuthenticationProvider extends SAMLAuthenticationProvider {
 
-    //Override methods in case of different data
+    //Override methods in case of different type of user objects
     @Override
     protected Object getUserDetails(SAMLCredential credential) {
-        Object userDetails = credential.getNameID().getValue();
-        return userDetails;
+        return credential.getNameID().getValue();
     }
+
 }

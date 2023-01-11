@@ -16,10 +16,6 @@ public class SamlEntryPointConfig {
     public SAMLEntryPoint samlEntryPoint() {
         SAMLEntryPoint samlEntryPoint = new SAMLEntryPoint();
         samlEntryPoint.setDefaultProfileOptions(defaultWebSSOProfileOptions());
-//        samlEntryPoint.setWebSSOprofile(webSSOprofile());
-//        samlEntryPoint.setContextProvider(contextProvider());
-//        samlEntryPoint.setMetadata(metadataManager);
-//        samlEntryPoint.setSamlLogger(samlLogger());
         return samlEntryPoint;
     }
 
