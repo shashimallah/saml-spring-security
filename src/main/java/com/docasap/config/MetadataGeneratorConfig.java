@@ -28,6 +28,8 @@ public class MetadataGeneratorConfig {
         metadataGenerator.setEntityId(samlAudience);
         metadataGenerator.setExtendedMetadata(extendedMetadata());
         metadataGenerator.setIncludeDiscoveryExtension(false);
+        //Flag indicating whether this service requires signed assertions.
+        metadataGenerator.setWantAssertionSigned(false);
         metadataGenerator.setKeyManager(keyManager());
         return metadataGenerator;
     }
